@@ -36,7 +36,7 @@ fetch-article = (i) ->
 post-list-done = -> 
   console.log "fetch post list done, total #{data.length} posts."
   console.log "fetching posts..."
-  fs.write-file-sync "data/#board/post-list.json", JSON.stringify(data)
+  fs.write-file-sync "data/#board/post-list.json", JSON.stringify({i, data})
   fetch-article 0
 
 fetch-list = (i) ->
@@ -61,7 +61,7 @@ fetch-list = (i) ->
         [author, title, href] = [null,null,null]
     if (i % 100) == 0 =>
       console.log "(write current result: #i records)"
-      fs.write-file-sync "data/#board/post-list.json", JSON.stringify(data)
+      fs.write-file-sync "data/#board/post-list.json", JSON.stringify({i, data})
     set-timeout (-> fetch-list i + 1), 10
 
 if !fs.exists-sync("data") => fs.mkdir-sync "data"
@@ -69,8 +69,10 @@ if !fs.exists-sync("data/#board") => fs.mkdir-sync "data/#board"
 if !fs.exists-sync("data/#board/post") => fs.mkdir-sync "data/#board/post"
 
 console.log "fetching board '#board'..."
+
+index = 0
 if fs.exists-sync("data/#board/post-list.json") =>
   console.log "previous fetch found. load..."
-  data = JSON.parse fs.read-file-sync "data/#board/post-list.json"
-
-fetch-list data.length + 1
+  {i,data} = JSON.parse fs.read-file-sync "data/#board/post-list.json"
+  index = i
+fetch-list index + 1
