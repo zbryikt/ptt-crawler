@@ -27,13 +27,13 @@ fetch-article = (i) ->
     b = b.replace /(<\/?div[^>]*>\s*)+/g, \\n
     b = b.replace /<\/div>/g, \\n
     b = b.replace /<[^>]+>/g, " "
-    console.log i, (b or "")length, e, r.status-code
+    console.log "post", i, (b or "")length, e, r.status-code
     if e or r.status-code != 200 =>
       return set-timeout (-> fetch-article (if r.status-code==404 => i + 1 else i)), 2000
     fs.write-file-sync "data/#board/post/#i.html", b
     return if i == data.length - 1 => post-done! else set-timeout (-> fetch-article i + 1), 11
 
-post-list-done = -> 
+post-list-done = (i) -> 
   console.log "fetch post list done, total #{data.length} posts."
   console.log "fetching posts..."
   fs.write-file-sync "data/#board/post-list.json", JSON.stringify({i, data})
@@ -44,10 +44,10 @@ fetch-list = (i) ->
   jar.set-cookie cookie, url
   request {url, jar}, (e,r,b) ->
     if r =>
-    console.log i, e, (if r => r.status-code else "no response")
+    console.log "list", i, e, (if r => r.status-code else "no response")
     if e or !r or r.status-code != 200 => 
       return if r and (r.status-code == 404 or r.status-code == 500) => 
-        post-list-done! 
+        post-list-done i
       else set-timeout (-> fetch-list i), 2000
     lines = b.replace /(\\t)+/g .split \\n
     for line in lines
@@ -74,5 +74,6 @@ index = 0
 if fs.exists-sync("data/#board/post-list.json") =>
   console.log "previous fetch found. load..."
   {i,data} = JSON.parse fs.read-file-sync "data/#board/post-list.json"
+  console.log ">>>", i
   index = i
 fetch-list index + 1
