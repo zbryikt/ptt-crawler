@@ -1,0 +1,28 @@
+{
+  "author": "Kirby Wu",
+  "name": "ptt-crawler",
+  "description": "ptt crawler",
+  "version": "0.0.1",
+  "homepage": "https://github.com/zbryikt/ptt-crawler",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zbryikt/ptt-crawler"
+  },
+  "engines": {
+    "node": ">=0.8.18",
+    "npm": ">=1.2.2"
+  },
+  "scripts": {
+    "start": "./node_modules/.bin/lsc server.ls",
+    "restart": "node_modules\\.bin\\lsc server.ls",
+    "prepare": "npm install chokidar@0.8.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "LiveScript": ">=1.2.0",
+    "jade": "=0.27.6",
+    "chokidar": "=0.8.0"
+    "request": ">=2.34.0"
+    "prelude-ls": ">=1.0.3"
+  }
+}
