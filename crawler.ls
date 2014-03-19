@@ -6,6 +6,9 @@ if process.argv.length < 3 =>
   process.exit!
 board = process.argv.2
 data = []
+request = request.defaults jar: true
+jar = request.jar!
+cookie = request.cookie "over18=1"
 
 post-done = ->
   console.log "fetch post done. "
@@ -17,7 +20,8 @@ fetch-article = (i) ->
     i++
   if i >= data.length => return post-done!
   url = "http://www.ptt.cc#{data[i]2}"
-  request url, (e,r,b) ->
+  jar.set-cookie cookie, url
+  request {url,jar}, (e,r,b) ->
     c = b.index-of '<div id="main-container">'
     if c => b = b.substring c
     b = b.replace /(<\/?div[^>]*>\s*)+/g, \\n
@@ -37,10 +41,14 @@ post-list-done = ->
 
 fetch-list = (i) ->
   url = "http://www.ptt.cc/bbs/#board/index#i.html"
-  request url, (e,r,b) ->
-    console.log i, e, r.status-code
-    if e or r.status-code != 200 => 
-      return if r.status-code == 404 or r.status-code == 500 => post-list-done! else set-timeout (-> fetch-list i), 2000
+  jar.set-cookie cookie, url
+  request {url, jar}, (e,r,b) ->
+    if r =>
+    console.log i, e, (if r => r.status-code else "no response")
+    if e or !r or r.status-code != 200 => 
+      return if r and (r.status-code == 404 or r.status-code == 500) => 
+        post-list-done! 
+      else set-timeout (-> fetch-list i), 2000
     lines = b.replace /(\\t)+/g .split \\n
     for line in lines
       ret1 = /a href="([^"]+)">(.+)<\/a>\s*$/.exec line
@@ -51,15 +59,18 @@ fetch-list = (i) ->
       if author and title =>
         data.push [author, title, href]
         [author, title, href] = [null,null,null]
+    if (i % 100) == 0 =>
+      console.log "(write current result: #i records)"
+      fs.write-file-sync "data/#board/post-list.json", JSON.stringify(data)
     set-timeout (-> fetch-list i + 1), 10
 
 if !fs.exists-sync("data") => fs.mkdir-sync "data"
 if !fs.exists-sync("data/#board") => fs.mkdir-sync "data/#board"
 if !fs.exists-sync("data/#board/post") => fs.mkdir-sync "data/#board/post"
-if !fs.exists-sync("data/#board/post-list.json") => 
-  console.log "fetching board '#board'..."
-  fetch-list 1
-else 
-  data := JSON.parse fs.read-file-sync "data/#board/post-list.json"
-  fetch-article 0
 
+console.log "fetching board '#board'..."
+if fs.exists-sync("data/#board/post-list.json") =>
+  console.log "previous fetch found. load..."
+  data = JSON.parse fs.read-file-sync "data/#board/post-list.json"
+
+fetch-list data.length + 1
