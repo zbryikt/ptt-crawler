@@ -53,6 +53,7 @@ fetch-list = (i) ->
         [author, title, href] = [null,null,null]
     set-timeout (-> fetch-list i + 1), 10
 
+if !fs.exists-sync("data") => fs.mkdir-sync "data"
 if !fs.exists-sync("data/#board") => fs.mkdir-sync "data/#board"
 if !fs.exists-sync("data/#board/post") => fs.mkdir-sync "data/#board/post"
 if !fs.exists-sync("data/#board/post-list.json") => 
