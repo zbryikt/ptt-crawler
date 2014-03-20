@@ -22,15 +22,16 @@ fetch-article = (i) ->
   url = "http://www.ptt.cc#{data[i]2}"
   jar.set-cookie cookie, url
   request {url,jar}, (e,r,b) ->
-    c = b.index-of '<div id="main-container">'
-    if c => b = b.substring c
-    b = b.replace /(<\/?div[^>]*>\s*)+/g, \\n
-    b = b.replace /<\/div>/g, \\n
-    b = b.replace /<[^>]+>/g, " "
-    console.log "post", i, (b or "")length, e, r.status-code
-    if e or r.status-code != 200 =>
-      return set-timeout (-> fetch-article (if r.status-code==404 => i + 1 else i)), 2000
-    fs.write-file-sync "data/#board/post/#i.html", b
+    if b => 
+      c = b.index-of '<div id="main-container">'
+      if c => b = b.substring c
+      b = b.replace /(<\/?div[^>]*>\s*)+/g, \\n
+      b = b.replace /<\/div>/g, \\n
+      b = b.replace /<[^>]+>/g, " "
+      console.log "post", i, (b or "")length, e, r.status-code
+      if e or r.status-code != 200 =>
+        return set-timeout (-> fetch-article (if r.status-code==404 => i + 1 else i)), 2000
+      fs.write-file-sync "data/#board/post/#i.html", b
     return if i == data.length - 1 => post-done! else set-timeout (-> fetch-article i + 1), 11
 
 post-list-done = (i) -> 
