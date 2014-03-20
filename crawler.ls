@@ -13,13 +13,13 @@ cookie = request.cookie "over18=1"
 post-done = ->
   console.log "fetch post done. "
 
-fetch-article = (i) ->
+fetch-article = (idx) ->
   #console.log i, url
   while true =>
-    if not fs.exists-sync "data/#board/post/#i.html" => break
-    i++
-  if i >= data.length => return post-done!
-  url = "http://www.ptt.cc#{data[i]2}"
+    if not fs.exists-sync "data/#board/post/#idx.html" => break
+    idx++
+  if idx >= data.length => return post-done!
+  url = "http://www.ptt.cc#{data[idx]2}"
   jar.set-cookie cookie, url
   request {url,jar}, (e,r,b) ->
     if b => 
@@ -28,12 +28,12 @@ fetch-article = (i) ->
       b = b.replace /(<\/?div[^>]*>\s*)+/g, \\n
       b = b.replace /<\/div>/g, \\n
       b = b.replace /<[^>]+>/g, " "
-      console.log "post", i, (b or "")length, e, r.status-code
+      console.log "post", idx, (b or "")length, e, r.status-code
       if e or r.status-code != 200 =>
-        return set-timeout (-> fetch-article (if r.status-code==404 => i + 1 else i)), 2000
-      fs.write-file-sync "data/#board/post/#i.html", b
-    else i = i - 1
-    return if i == data.length - 1 => post-done! else set-timeout (-> fetch-article i + 1), 11
+        return set-timeout (-> fetch-article (if r.status-code==404 => idx + 1 else idx)), 2000
+      fs.write-file-sync "data/#board/post/#idx.html", b
+    else idx := idx - 1
+    return if idx == data.length - 1 => post-done! else set-timeout (-> fetch-article idx + 1), 11
 
 post-list-done = (i) -> 
   console.log "fetch post list done, total #{data.length} posts."
@@ -49,7 +49,7 @@ fetch-list = (i) ->
     console.log "list", i, e, (if r => r.status-code else "no response")
     if e or !r or r.status-code != 200 => 
       return if r and (r.status-code == 404 or r.status-code == 500) => 
-        post-list-done i
+        post-list-done i - 1
       else set-timeout (-> fetch-list i), 2000
     lines = b.replace /(\\t)+/g .split \\n
     for line in lines
