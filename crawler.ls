@@ -32,6 +32,7 @@ fetch-article = (i) ->
       if e or r.status-code != 200 =>
         return set-timeout (-> fetch-article (if r.status-code==404 => i + 1 else i)), 2000
       fs.write-file-sync "data/#board/post/#i.html", b
+    else i = i - 1
     return if i == data.length - 1 => post-done! else set-timeout (-> fetch-article i + 1), 11
 
 post-list-done = (i) -> 
