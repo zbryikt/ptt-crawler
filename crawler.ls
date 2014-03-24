@@ -6,6 +6,7 @@ if process.argv.length < 3 =>
   process.exit!
 board = process.argv.2
 list-count = 0
+is-sync = false
 post-list = {page: 0, post: {}}
 post-queue = []
 request = request.defaults jar: true
@@ -46,7 +47,9 @@ post-list-done = (i) ->
   fetch-article 0
 
 fetch-list = (page) ->
-  if page == 0 => return post-list-done!
+  if page == 0 => 
+    post-list.page = 0
+    return post-list-done!
   url = "http://www.ptt.cc/bbs/#board/index#page.html"
   jar.set-cookie cookie, url
   request {url, jar}, (e,r,b) ->
@@ -62,10 +65,11 @@ fetch-list = (page) ->
       if ret2 => author = ret2.1
       key = if /\/([^/]+)\.html$/.exec href => that.1 else null
       if author and title and key =>
+        if (key of post-list.post) and is-sync => return post-list-done!
         post-list.post[key] = [author, title]
         [author, title, href, key] = [null,null,null,null]
     post-list.page = page
-    if (page % 50) == 0 =>
+    if (page % 30) == 0 =>
       console.log "(write current result: #page records)"
       fs.write-file-sync "data/#board/post-list.json", JSON.stringify post-list
     set-timeout (-> fetch-list page - 1), 100 + parse-int(Math.random!*300)
@@ -93,6 +97,9 @@ if fs.exists-sync("data/#board/post-list.json") =>
   console.log "previous fetch found. load..."
   post-list = JSON.parse fs.read-file-sync "data/#board/post-list.json"
   if post-list.page != 0 => fetch-list post-list.page
-  else post-list-done!
+  else 
+    console.log "previous fetch complete. only syncing latest update..."
+    is-sync = true
+    fetch-index!
 else
   fetch-index!
