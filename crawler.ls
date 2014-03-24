@@ -1,10 +1,11 @@
 require! <[fs request]>
 
 if process.argv.length < 3 =>
-  console.log "usage: lsc crawler.ls [board-name]"
+  console.log "usage: lsc crawler.ls [board-name] "
   console.log "example: lsc crawler.ls food"
   process.exit!
 board = process.argv.2
+list-count = 0
 post-list = {page: 0, post: {}}
 post-queue = []
 request = request.defaults jar: true
@@ -17,6 +18,7 @@ post-done = ->
 fetch-article = (idx) ->
   while true =>
     key = post-queue[idx]
+    if !key => break
     if not fs.exists-sync "data/#board/post/#{key.0}" => break
     idx++
   if idx >= post-queue.length => return post-done!
@@ -44,14 +46,13 @@ post-list-done = (i) ->
   fetch-article 0
 
 fetch-list = (page) ->
+  if page == 0 => return post-list-done!
   url = "http://www.ptt.cc/bbs/#board/index#page.html"
   jar.set-cookie cookie, url
   request {url, jar}, (e,r,b) ->
     console.log "list", page, e, (if r => r.status-code else "no response")
     if e or !r or r.status-code != 200 => 
-      return if r and (r.status-code == 404 or r.status-code == 500) => 
-        post-list-done!
-      else set-timeout (-> fetch-list page), 2000
+      set-timeout (-> fetch-list page), 2000
     lines = b.replace /(\\t)+/g .split \\n
     for line in lines
       ret1 = /a href="([^"]+)">(.+)<\/a>\s*$/.exec line
@@ -64,10 +65,23 @@ fetch-list = (page) ->
         post-list.post[key] = [author, title]
         [author, title, href, key] = [null,null,null,null]
     post-list.page = page
-    if (page % 100) == 0 =>
+    if (page % 50) == 0 =>
       console.log "(write current result: #page records)"
       fs.write-file-sync "data/#board/post-list.json", JSON.stringify post-list
-    set-timeout (-> fetch-list page + 1), 10
+    set-timeout (-> fetch-list page - 1), 100 + parse-int(Math.random!*300)
+
+fetch-index = ->
+  url = "http://www.ptt.cc/bbs/#board/index.html"
+  jar.set-cookie cookie, url
+  console.log "analyzing how many lists to fetch..."
+  request {url, jar}, (e,r,b) ->
+    #ret = /\s+href="index(\d+)\.html">\&lsaquo; 上頁<\/a>/.exec b.replace /[\r\n]/g, ""
+    ret = /\s+href=".+\/index(\d+)\.html">&lsaquo; 上頁<\/a>/.exec b.replace /[\r\n]/g, ""
+    if !ret => return console.log "cannot find the last list page index. abort."
+    list-count := ret.1 
+    console.log "total #list-count list pages. "
+    set-timeout (-> fetch-list list-count), 100
+
 
 if !fs.exists-sync("data") => fs.mkdir-sync "data"
 if !fs.exists-sync("data/#board") => fs.mkdir-sync "data/#board"
@@ -75,9 +89,10 @@ if !fs.exists-sync("data/#board/post") => fs.mkdir-sync "data/#board/post"
 
 console.log "fetching board '#board'..."
 
-start-page = 0
 if fs.exists-sync("data/#board/post-list.json") =>
   console.log "previous fetch found. load..."
   post-list = JSON.parse fs.read-file-sync "data/#board/post-list.json"
-  start-page = post-list.page
-fetch-list start-page + 1
+  if post-list.page != 0 => fetch-list post-list.page
+  else post-list-done!
+else
+  fetch-index!
