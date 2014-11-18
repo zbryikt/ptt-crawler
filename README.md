@@ -1,10 +1,9 @@
 ptt-crawler
 ===========
+Crawl ptt articles from its website
 
-crawl ptt articles from its website
-
-usage:
-
+Usage
+===
 * install:
 
     `npm install`
