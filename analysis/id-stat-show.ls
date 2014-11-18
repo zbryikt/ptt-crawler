@@ -5,11 +5,24 @@ if process.argv.length < 3 =>
   console.log "example: lsc id-stat.ls food"
   process.exit!
 board = process.argv.2
-files = fs.readdir-sync "data/#board/post"
+
+try
+  files = fs.readdir-sync "../data/#board/post"
+  if files.length == 0
+    console.log "There is no post in this board or fetching failed."
+    process.exit!
+catch
+  console.log "Please fetching post of this board first."
+  process.exit!
 hash = {}
 relate = {}
 
-[data, suspect] = JSON.parse(fs.read-file-sync "data/#board/id-stat.json" .to-string!)
+try
+  [data, suspect] = JSON.parse(fs.read-file-sync "../data/#board/id-stat.json" .to-string!)
+catch
+  console.log "Please use id-stat.ls first to generate id-stat.json"
+  process.exit!
+
 max0 = 0
 id0 = null
 max2 = 0
@@ -66,4 +79,4 @@ for item in suspect-id
   console.log item.0, item.1
   if item.1 > 100 => console.log ["#{v.1} #{v.0}" for v in relate[item.0]].join "\n"
 
-fs.write-file-sync "data/#board/suspect.json", JSON.stringify {suspect: suspect-id, relate: relate}
+fs.write-file-sync "../data/#board/suspect.json", JSON.stringify {suspect: suspect-id, relate: relate}
