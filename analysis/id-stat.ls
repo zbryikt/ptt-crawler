@@ -12,7 +12,7 @@ try
      console.log "There is no post in this board or fetching failed."
      process.exit!
 catch
-  console.log "Pleas fetching post of this board first"
+  console.log "Please fetching post of this board first."
   process.exit!
 
 hash = {}
@@ -33,7 +33,7 @@ for file in files
   count++
   if (count % 100) == 0 => console.log "#count files parsed."
   fkey = file
-  file = "data/#board/post/#file"
+  file = "../data/#board/post/#file"
   #if not /\.html$/.exec file => continue
   lines = fs.read-file-sync file .to-string!split \\n
   author = /^\s*作者\s+(\S+)/.exec lines.1
@@ -61,4 +61,4 @@ for file in files
   #if score < -200 =>
   #  console.log author
   #  process.exit -1
-fs.write-file-sync "data/#board/id-stat.json", JSON.stringify([hash, suspect])
+fs.write-file-sync "../data/#board/id-stat.json", JSON.stringify([hash, suspect])
