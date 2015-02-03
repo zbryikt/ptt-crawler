@@ -1,3 +1,4 @@
+#!/usr/bin/env lsc
 require! <[fs request]>
 
 if process.argv.length < 3 =>
@@ -5,6 +6,7 @@ if process.argv.length < 3 =>
   console.log "example: lsc crawler.ls food"
   process.exit!
 board = process.argv.2
+
 list-count = 0
 is-sync = false
 post-list = {page: 0, post: {}}
