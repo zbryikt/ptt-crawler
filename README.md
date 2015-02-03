@@ -20,3 +20,8 @@ food.ls: example for fetching articles for article generation
 home-sale.ls: example for categorizing purpose of articles
 id-stat.ls: analyze users stand point. output to data/<board-name>/id-stat.json
 id-stat-show.ls: show users statistics, generate suspect.json.
+
+LICENSE
+============
+
+all sources are licensed under [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/).
