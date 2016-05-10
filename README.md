@@ -24,4 +24,5 @@ id-stat-show.ls: show users statistics, generate suspect.json.
 LICENSE
 ============
 
-all sources are licensed under [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/).
+all sources are licensed under MIT License.
+( I used [CC-BY-4.0 license](https://creativecommons.org/licenses/by/4.0/) before, but MIT License is better for code license. please refer to correspondent license according to the time you fork this project. )
